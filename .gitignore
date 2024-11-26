@@ -1,162 +1,144 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import numpy as np
 
-# C extensions
-*.so
+# Helper function to convert lowercase letters to uppercase
+def up(letter):
+    text1 = ""
+    for i in letter:
+        if ord('a') <= ord(i) <= ord('z'):
+            text2 = chr(ord(i) - 32)
+            text1 += text2
+        elif ord('A') <= ord(i) <= ord('Z'):
+            text2 = i
+            text1 += text2
+        else:
+            print("Not Alphabet")
+    return text1
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Helper function to remove spaces from text
+def space(s):
+    text = ""
+    for i in s:
+        if ord(i) != 32:
+            text += i
+    return text
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Function to perform matrix multiplication
+def mat(a, b):
+    row1 = len(a)
+    row2 = len(b)
+    col1 = len(a[0])
+    col2 = len(b[0])
+    result = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    for i in range(row1):
+        for j in range(col2):
+            for k in range(col1):
+                result[i][j] += a[i][k] * b[k][j]
+    res = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    m = 0
+    for row in result:
+        res[m] = row
+        m += 1
+    return res
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Function to calculate the determinant of a 3x3 matrix
+def det(m):
+    d = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - \
+        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + \
+        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0])
+    return d
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+# Function to convert a letter to its corresponding number (A = 0, B = 1, ..., Z = 25)
+def letter_to_number(letter):
+    return ord(letter) - ord('A')
 
-# Translations
-*.mo
-*.pot
+# Function to convert a number to its corresponding letter
+def number_to_letter(number):
+    return chr(number + ord('A'))
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Function to create a 3x3 key matrix from the provided key string
+def create_key(key):
+    key = up(key)  # Ensure key is in uppercase
+    matrix = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    s = 0
+    for i in range(3):
+        for j in range(3):
+            matrix[i][j] = letter_to_number(key[s])
+            s += 1
+    return matrix
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Function to calculate modular inverse
+def mod_inv(a, m):
+    for x in range(1, m):
+        if (a * x) % m == 1:
+            return x
+    return None
 
-# Scrapy stuff:
-.scrapy
+# Encryption function for the Hill Cipher
+def enc(pt, key):
+    pt = space(pt)  # Remove spaces from the plaintext
+    pt = up(pt)     # Convert plaintext to uppercase
 
-# Sphinx documentation
-docs/_build/
+    if len(pt) % 3 != 0:
+        pt += 'X' * (3 - len(pt) % 3)  # Pad the plaintext if necessary
 
-# PyBuilder
-.pybuilder/
-target/
+    keymat = create_key(key)  # Create the key matrix
+    numtext = [letter_to_number(letter) for letter in pt]  # Convert plaintext to numbers
 
-# Jupyter Notebook
-.ipynb_checkpoints
+    et = ""  # Encrypted text
+    for i in range(0, len(numtext), 3):
+        block = [[numtext[i]], [numtext[i + 1]], [numtext[i + 2]]]  # 3x1 block of plaintext numbers
+        encrypted_block = mat(keymat, block)  # Multiply by key matrix
+        encrypted_block = [[num % 26 for num in row] for row in encrypted_block]  # Modulo 26
 
-# IPython
-profile_default/
-ipython_config.py
+        et += number_to_letter(encrypted_block[0][0])
+        et += number_to_letter(encrypted_block[1][0])
+        et += number_to_letter(encrypted_block[2][0])
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+    return et
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+# Decryption function for the Hill Cipher
+def dec(ct, key):
+    ct = space(ct)  # Remove spaces from the ciphertext
+    ct = up(ct)     # Convert ciphertext to uppercase
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+    keymat = create_key(key)  # Create the key matrix
+    determinant = int(round(det(keymat)))  # Calculate the determinant
+    mod_inv_det = mod_inv(determinant % 26, 26)  # Find the modular inverse of the determinant
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
+    if mod_inv_det is None:
+        return "Error: Key is not invertible."
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+    # Calculate the inverse key matrix
+    adjoint = np.round(np.multiply(np.linalg.det(keymat), np.linalg.inv(keymat))).astype(int) % 26
+    inverse_key = (mod_inv_det * adjoint) % 26
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+    numtext = [letter_to_number(letter) for letter in ct]  # Convert ciphertext to numbers
 
-# SageMath parsed files
-*.sage.py
+    pt = ""  # Decrypted plaintext
+    for i in range(0, len(numtext), 3):
+        block = np.array([[numtext[i]], [numtext[i + 1]], [numtext[i + 2]]])  # 3x1 block of ciphertext numbers
+        decrypted_block = np.dot(inverse_key, block) % 26  # Multiply by inverse key matrix
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+        pt += number_to_letter(decrypted_block[0][0])
+        pt += number_to_letter(decrypted_block[1][0])
+        pt += number_to_letter(decrypted_block[2][0])
 
-# Spyder project settings
-.spyderproject
-.spyproject
+    return pt
 
-# Rope project settings
-.ropeproject
 
-# mkdocs documentation
-/site
+# Main loop to interact with the user
+key = "GYBNQKURP"  # Example of an invertible key
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+while True:
+    r = create_key(key)  # Create the key matrix
+    print("Key matrix:", r)
+    pt = input("Enter Plain Text: ")  # Input plaintext
+    c = enc(pt, key)  # Encrypt plaintext
+    print("Cipher Text:", c)
+    p = dec(c, key)  # Decrypt ciphertext
+    print("Decrypted Text:", p)
 
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+    x = p.find('X')  # Check if padding exists
+    if x != -1:
+        p = p[:x]  # Remove padding
+    print("Decrypted Plain Text:", p)
